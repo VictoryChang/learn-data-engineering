@@ -12,9 +12,12 @@ import requests
 load_dotenv(Path("~/.env").expanduser())
 
 
-@dg.asset(group_name="sources", kinds={"csv"})
+@dg.asset(group_name="sources", kinds={"csv", "mysql"})
 def extract_csv() -> dg.MaterializeResult:
     pandas_df = pd.read_csv("src/etl_tutorial/defs/data/csv_demo.csv")
+    mysql_engine = create_engine('mysql+pymysql://root:mysecretpassword@127.0.0.1:3306/mysql_demo')
+    print(mysql_engine)
+    pandas_df.to_sql('raw_csv_users', con=mysql_engine, if_exists='append', index=False)
 
     return dg.MaterializeResult(
         metadata={
@@ -23,13 +26,16 @@ def extract_csv() -> dg.MaterializeResult:
         }
     )
 
-@dg.asset(group_name="sources", kinds={"postgres"})
+@dg.asset(group_name="sources", kinds={"postgres", "mysql"})
 def extract_postgres() -> dg.MaterializeResult:
     postgres_engine = create_engine(
         f"postgresql://{os.environ['POSTGRES_USERNAME']}:{os.environ['POSTGRES_PASSWORD']}@{os.environ['POSTGRES_HOST']}:{os.environ['POSTGRES_PORT']}/postgres_demo")
 
     pandas_df = pd.read_sql_query("SELECT * FROM users", con=postgres_engine)
-    
+    mysql_engine = create_engine('mysql+pymysql://root:mysecretpassword@127.0.0.1:3306/mysql_demo')
+    print(mysql_engine)
+    pandas_df.to_sql('raw_postgres_users', con=mysql_engine, if_exists='append', index=False)
+
     return dg.MaterializeResult(
         metadata={
             "row_count": pandas_df.shape[0],
@@ -38,7 +44,7 @@ def extract_postgres() -> dg.MaterializeResult:
     )
 
 
-@dg.asset(group_name="sources", kinds={"mongodb"})
+@dg.asset(group_name="sources", kinds={"mongodb", "mysql"})
 def extract_mongodb() -> dg.MaterializeResult:
     mongo_client = pymongo.MongoClient(
         host=os.environ['MONGODB_HOST'],
@@ -48,6 +54,10 @@ def extract_mongodb() -> dg.MaterializeResult:
     
     pandas_df = pd.DataFrame(cursor)
     
+    mysql_engine = create_engine('mysql+pymysql://root:mysecretpassword@127.0.0.1:3306/mysql_demo')
+    print(mysql_engine)
+    pandas_df.to_sql('raw_mongodb_users', con=mysql_engine, if_exists='append', index=False)
+
     return dg.MaterializeResult(
         metadata={
             "row_count": pandas_df.shape[0],
@@ -56,7 +66,7 @@ def extract_mongodb() -> dg.MaterializeResult:
     )
 
 
-@dg.asset(group_name="sources", kinds={"api"})
+@dg.asset(group_name="sources", kinds={"api", "mysql"})
 def extract_api() -> dg.MaterializeResult:
     response = requests.get(
         url="https://reqres.in/api/users?page=2",
@@ -64,6 +74,10 @@ def extract_api() -> dg.MaterializeResult:
     assert response.status_code == 200
 
     pandas_df = pd.DataFrame(response.json()["data"])
+
+    mysql_engine = create_engine('mysql+pymysql://root:mysecretpassword@127.0.0.1:3306/mysql_demo')
+    print(mysql_engine)
+    pandas_df.to_sql('raw_api_users', con=mysql_engine, if_exists='append', index=False)
 
     return dg.MaterializeResult(
         metadata={
@@ -75,6 +89,7 @@ def extract_api() -> dg.MaterializeResult:
 
 @dg.asset(
     group_name="transformations",
-    deps=[extract_csv, extract_mongodb, extract_postgres, extract_api])
+    deps=[extract_csv, extract_mongodb, extract_postgres, extract_api],
+    kinds={"mysql"})
 def transform():
     pass

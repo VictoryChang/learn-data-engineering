@@ -4,7 +4,7 @@
 The purpose of this project is to learn how to do data engineering using modern open-source data engineer tools.
 
 
-### Sources
+## Sources
 
 <details open>
 <summary>MongoDB</summary>
@@ -31,7 +31,7 @@ docker run --name mongodb -p 27017:27017 -d mongodb/mongodb-community-server:lat
 
 * Docker: docker run --name some-postgres -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
 
-* UI: dbeaver
+* UI: DBeaver
 
 * CLI: psql -h localhost -p 5432 -d postgres -U postgres
 * Inserting Sample Data
@@ -99,4 +99,22 @@ if __name__ == "__main__":
 pandas_df = pd.read_csv("src/etl_tutorial/defs/data/csv_demo.csv")
 
 ```
+</details>
+
+
+## Destination
+<details open>
+<summary>MySQL</summary>
+We'll use MySQL as a demonstration because it is accessible from docker.
+
+* Docker: docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=mysecretpassword -d mysql
+
+* UI: DBeaver
+
+* CLI: mysqlsh -h 127.0.0.1 -P 3306  -u root
+
+* Code:
+  * CREATE DATABASE mysql_demo;
+  * USE mysql_demo;
+
 </details>
